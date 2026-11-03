@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Quiet Places</title>
+<meta name="description" content="A catalog of beautiful natural places.">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Nunito+Sans:wght@400;600;700&display=swap">
+<style>
+/* Layout: masthead, search + category chips, then a masonry wall of photo cards. A card opens a full view over the page. Palette: moss, lichen, river water. */
+:root{
+  --bg:#EDF1E8; --fg:#1A2820; --muted:#566559; --card:#F7F9F4; --line:#CBD5C4;
+  --moss:#34503C; --on-moss:#F2F6EC; --lichen:#A8BE9B; --water:#2A7C84; --shade:rgba(20,32,24,.55);
+  --display:'Bricolage Grotesque','Trebuchet MS',system-ui,sans-serif;
+  --body:'Nunito Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0E1812; --fg:#E4ECDF; --muted:#9BAA9E; --card:#16241B; --line:#27382D;
+    --moss:#7FA487; --on-moss:#0E1812; --lichen:#3C5543; --water:#5DB4BC; --shade:rgba(0,0,0,.7);
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0E1812; --fg:#E4ECDF; --muted:#9BAA9E; --card:#16241B; --line:#27382D;
+  --moss:#7FA487; --on-moss:#0E1812; --lichen:#3C5543; --water:#5DB4BC; --shade:rgba(0,0,0,.7);
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;background:var(--bg);color:var(--fg);font-family:var(--body);font-size:16px;line-height:1.6;
+  padding-block:36px 56px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+}
+.wrap{max-width:1180px;margin:0 auto}
+.mast{display:grid;gap:14px;margin-bottom:28px}
+.mast h1{font-family:var(--display);font-weight:800;font-size:clamp(44px,9vw,92px);line-height:.95;margin:0;letter-spacing:-.02em;text-wrap:balance}
+.mast p{margin:0;max-width:56ch;font-size:18px;color:var(--muted)}
+.tools{display:grid;gap:14px;margin-bottom:22px}
+.search{width:100%;max-width:420px;font:inherit;padding:11px 16px;border:2px solid var(--line);background:var(--card);color:var(--fg);border-radius:999px}
+.search:focus{outline:3px solid var(--water);outline-offset:1px;border-color:var(--water)}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{font:700 14px var(--body);padding:7px 14px;border:2px solid var(--moss);background:transparent;color:var(--moss);cursor:pointer;border-radius:999px}
+.chip[aria-pressed="true"]{background:var(--moss);color:var(--on-moss)}
+.chip:focus-visible,.close:focus-visible,.card:focus-visible,.thumb:focus-visible,.maplink:focus-visible{outline:3px solid var(--water);outline-offset:2px}
+.count{font-size:14px;color:var(--muted)}
+.wall{columns:4 230px;column-gap:18px}
+.card{display:block;break-inside:avoid;margin:0 0 18px;background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden;color:inherit;text-decoration:none}
+.card[hidden]{display:none!important}
+.card img{display:block;width:100%;height:auto}
+.ph{display:flex;align-items:flex-end;padding:16px;background:linear-gradient(160deg,var(--lichen),var(--moss));color:var(--on-moss);width:100%}
+.ph svg{width:34px;height:34px;opacity:.85}
+.meta{padding:12px 14px 14px;display:grid;gap:2px}
+.meta h2{font-family:var(--display);font-weight:600;font-size:19px;line-height:1.2;margin:0}
+.meta .loc{font-size:14px;color:var(--muted)}
+.meta .cat{font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--water)}
+@media (prefers-reduced-motion:no-preference){.card{transition:transform .15s,box-shadow .15s}.card:hover{transform:translateY(-3px);box-shadow:0 8px 22px var(--shade)}}
+.empty{padding:40px 0;color:var(--muted)}
+.modal{position:fixed;inset:0;z-index:20;background:var(--shade);overflow-y:auto;
+  padding:max(16px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) max(16px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.modal[hidden]{display:none!important}
+.sheet{max-width:900px;margin:0 auto;background:var(--card);border-radius:14px;overflow:hidden;position:relative}
+.close{position:absolute;top:12px;right:12px;z-index:2;font:700 14px var(--body);padding:8px 14px;border:0;border-radius:999px;background:var(--bg);color:var(--fg);cursor:pointer}
+.main{display:block;width:100%;max-height:75vh;object-fit:contain;background:var(--lichen)}
+.mainph{min-height:220px}
+.thumbs{display:flex;gap:8px;padding:10px 18px 0;overflow-x:auto}
+.thumb{flex:0 0 auto;width:72px;height:72px;padding:0;border:2px solid transparent;border-radius:8px;overflow:hidden;cursor:pointer;background:none}
+.thumb[aria-current="true"]{border-color:var(--water)}
+.thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.info{padding:20px 22px 26px;display:grid;gap:12px}
+.info h2{font-family:var(--display);font-weight:800;font-size:clamp(28px,5vw,42px);line-height:1.05;margin:0}
+.info .cat{font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--water)}
+.info p{margin:0;max-width:64ch}
+.facts{display:grid;gap:4px;font-size:15px}
+.facts b{font-weight:700}
+.tags{display:flex;gap:6px;flex-wrap:wrap;padding:0;margin:0;list-style:none}
+.tags li{font-size:13px;padding:3px 10px;border:1px solid var(--line);border-radius:999px;color:var(--muted)}
+.maplink{justify-self:start;font-weight:700;color:var(--water)}
+.foot{margin-top:36px;font-size:14px;color:var(--muted)}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="mast">
+    <h1 id="siteTitle">Quiet Places</h1>
+    <p id="siteSub"></p>
+  </header>
+  <div class="tools">
+    <input class="search" id="q" type="search" autocomplete="off">
+    <div class="chips" id="chips" role="group" aria-label="Categories"></div>
+    <div class="count" id="count" aria-live="polite"></div>
+  </div>
+  <main class="wall" id="wall"></main>
+  <div class="empty" id="empty" hidden></div>
+  <div class="foot" id="foot"></div>
+</div>
+
+<div class="modal" id="modal" hidden role="dialog" aria-modal="true" aria-labelledby="mt">
+  <div class="sheet" id="sheet"></div>
+</div>
+
+<script src="places.js"></script>
+<script>
+(function(){
+var S=window.SITE||{};
+var P=(window.PLACES||[]).slice();
+var ui=Object.assign({search:'Search places',all:'All',close:'Close',location:'Location',tip:'Tip',map:'Open on map',empty:'Nothing found. Try another word or category.',places:'places',best:'Best time'},S.ui||{});
+function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function slug(s){return String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'')}
+var seen={};
+P.forEach(function(p,i){
+  var id=slug(p.id)||slug(p.title)||('place-'+(i+1));
+  while(seen[id]){id+='-x'}
+  seen[id]=1;p._id=id;
+  p._images=[p.image].concat(p.images||[]).filter(Boolean);
+  p._tags=(p.tags||[]);
+  p._hay=[p.title,p.location,p.category,p.description,p._tags.join(' ')].join(' ').toLowerCase();
+});
+document.title=S.title||document.title;
+document.getElementById('siteTitle').textContent=S.title||'Quiet Places';
+document.getElementById('siteSub').textContent=S.subtitle||'';
+document.getElementById('foot').textContent=S.footer||'';
+var q=document.getElementById('q');q.placeholder=ui.search;q.setAttribute('aria-label',ui.search);
+var wall=document.getElementById('wall'),chipsEl=document.getElementById('chips'),countEl=document.getElementById('count'),emptyEl=document.getElementById('empty');
+emptyEl.textContent=ui.empty;
+var LEAF='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 19C5 10 10 5 20 4c0 10-5 15-14 15z"/><path d="M5 19c3-5 6-8 10-10"/></svg>';
+var RATIOS=['4/5','1/1','3/4','5/4'];
+function ph(i,big){var d=document.createElement('div');d.className='ph'+(big?' mainph':'');d.style.aspectRatio=big?'':RATIOS[i%RATIOS.length];d.innerHTML=LEAF;return d}
+function pimg(src,alt,i,cls){
+  var im=document.createElement('img');im.loading='lazy';im.alt=alt||'';im.src=src;if(cls)im.className=cls;
+  im.addEventListener('error',function(){if(im.parentNode)im.replaceWith(ph(i,!!cls))});
+  return im;
+}
+P.forEach(function(p,i){
+  var a=document.createElement('a');a.className='card';a.href='#'+p._id;a.setAttribute('data-cat',p.category||'');a.id='card-'+p._id;
+  a.appendChild(p._images.length?pimg(p._images[0],p.title,i):ph(i));
+  var m=document.createElement('div');m.className='meta';
+  m.innerHTML=(p.category?'<span class="cat">'+esc(p.category)+'</span>':'')+'<h2>'+esc(p.title)+'</h2>'+(p.location?'<span class="loc">'+esc(p.location)+'</span>':'');
+  a.appendChild(m);wall.appendChild(a);p._el=a;
+});
+var cats=[];P.forEach(function(p){if(p.category&&cats.indexOf(p.category)<0)cats.push(p.category)});
+var active='';
+function mkChip(label,val){
+  var b=document.createElement('button');b.type='button';b.className='chip';b.textContent=label;b.setAttribute('data-v',val);b.setAttribute('aria-pressed',String(val===active));chipsEl.appendChild(b);
+}
+if(cats.length>1){mkChip(ui.all,'');cats.forEach(function(c){mkChip(c,c)})}
+chipsEl.addEventListener('click',function(e){
+  var b=e.target.closest('.chip');if(!b)return;
+  active=b.getAttribute('data-v');
+  chipsEl.querySelectorAll('.chip').forEach(function(x){x.setAttribute('aria-pressed',String(x===b))});
+  filter();
+});
+q.addEventListener('input',filter);
+function filter(){
+  var t=q.value.trim().toLowerCase(),n=0;
+  P.forEach(function(p){
+    var ok=(!active||p.category===active)&&(!t||p._hay.indexOf(t)>=0);
+    p._el.hidden=!ok;if(ok)n++;
+  });
+  countEl.textContent=n+' '+ui.places;
+  emptyEl.hidden=n>0;
+}
+filter();
+var modal=document.getElementById('modal'),sheet=document.getElementById('sheet');
+function paras(t){return String(t||'').split(/\n\s*\n/).map(function(x){return x.trim()}).filter(Boolean).map(function(x){return '<p>'+esc(x).replace(/\n/g,'<br>')+'</p>'}).join('')}
+function show(p,idx){
+  var i=P.indexOf(p);
+  var html='<button type="button" class="close" id="closeBtn">'+esc(ui.close)+'</button><div id="mainBox"></div><div class="thumbs" id="thumbs"></div>'+
+   '<div class="info">'+(p.category?'<span class="cat">'+esc(p.category)+'</span>':'')+'<h2 id="mt">'+esc(p.title)+'</h2>'+
+   '<div class="facts">'+(p.location?'<div><b>'+esc(ui.location)+':</b> '+esc(p.location)+'</div>':'')+(p.season?'<div><b>'+esc(ui.best)+':</b> '+esc(p.season)+'</div>':'')+'</div>'+
+   paras(p.description)+(p.tip?'<p><b>'+esc(ui.tip)+':</b> '+esc(p.tip)+'</p>':'')+
+   (p._tags.length?'<ul class="tags">'+p._tags.map(function(t){return '<li>'+esc(t)+'</li>'}).join('')+'</ul>':'')+
+   (/^https?:\/\//.test(p.map||'')?'<a class="maplink" target="_blank" rel="noopener" href="'+esc(p.map)+'">'+esc(ui.map)+'</a>':'')+'</div>';
+  sheet.innerHTML=html;
+  var box=document.getElementById('mainBox'),th=document.getElementById('thumbs');
+  function setMain(k){
+    box.innerHTML='';
+    box.appendChild(p._images.length?pimg(p._images[k],p.title,i,'main'):ph(i,true));
+    th.querySelectorAll('.thumb').forEach(function(x,j){x.setAttribute('aria-current',String(j===k))});
+  }
+  if(p._images.length>1){
+    p._images.forEach(function(src,k){
+      var b=document.createElement('button');b.type='button';b.className='thumb';
+      var im=document.createElement('img');im.src=src;im.alt='';b.appendChild(im);
+      b.addEventListener('click',function(){setMain(k)});th.appendChild(b);
+    });
+  }else{th.hidden=true}
+  setMain(0);
+  document.getElementById('closeBtn').addEventListener('click',function(){location.hash=''});
+}
+function route(){
+  var id=decodeURIComponent((location.hash||'').replace(/^#/,''));
+  var p=null;P.forEach(function(x){if(x._id===id)p=x});
+  if(p){show(p);modal.hidden=false;document.body.style.overflow='hidden';modal.scrollTop=0;var c=document.getElementById('closeBtn');if(c)c.focus()}
+  else{modal.hidden=true;document.body.style.overflow=''}
+}
+modal.addEventListener('click',function(e){if(e.target===modal)location.hash=''});
+document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!modal.hidden)location.hash=''});
+window.addEventListener('hashchange',route);
+route();
+})();
+</script>
+
+</body>
+</html>
